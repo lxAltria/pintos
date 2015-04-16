@@ -154,10 +154,6 @@ thread_tick (void)
       struct thread * t = list_entry(e, struct thread, sleep_elem);
       if (t->awakeTime > currentTick)
         break;
-      else
-
-      printf("awake time: %d\n", t->awakeTime);
-      printf("thread id: %d\n", t->tid);
       
       thread_unblock(t);
 
