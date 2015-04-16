@@ -144,11 +144,15 @@ thread_tick (void)
 
   if(!list_empty(&sleeping_list)){
     int64_t time_now = timer_ticks ();
-    struct thread * sleeping_t = list_entry(list_front(&sleeping_list), struct thread, elem);
-    while(sleeping_t->awake_time <= time_now){
-      thread_unblock(sleeping_t);
+    struct list_elem * e;
+    e = list_begin(&sleeping_list);
+    while (e != list_end(&sleeping_list))
+    {
+      struct thread *t = list_entry (e, struct thread, sleep_elem);
+      if(t->awake_time > time_now) break;
+      thread_unblock(t);
       list_pop_front(&sleeping_list);
-      sleeping_t = list_entry(list_front(&sleeping_list), struct thread, elem);
+      e = list_begin(&sleeping_list);
     }
   }
 }
@@ -237,16 +241,15 @@ bool sleep_less_func (const struct list_elem *a,
                       const struct list_elem *b,
                       void *aux UNUSED)
 {
-  const struct thread * t1 = list_entry (a, struct thread, elem);
-  const struct thread * t2 = list_entry (b, struct thread, elem);
+  const struct thread * t1 = list_entry (a, struct thread, sleep_elem);
+  const struct thread * t2 = list_entry (b, struct thread, sleep_elem);
   return t1->awake_time < t2->awake_time;
 }
 
 void
 thread_sleep (void)
 {
-  list_insert_ordered(&sleeping_list, &thread_current ()->elem, sleep_less_func, NULL);
-
+  list_insert_ordered(&sleeping_list, &thread_current ()->sleep_elem, sleep_less_func, NULL);
   thread_block();
 }
 

@@ -96,7 +96,7 @@ timer_sleep (int64_t ticks)
   t->awake_time = start + ticks;
 
   intr_disable ();
-  thread_sleep (t);
+  thread_sleep ();
   intr_enable ();
 
   ASSERT (intr_get_level () == INTR_ON);
