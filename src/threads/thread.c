@@ -160,7 +160,7 @@ thread_tick (void)
       list_remove(e);
     }
   }
-
+  thread_yield();
 
 
 }
@@ -249,8 +249,12 @@ thread_create (const char *name, int priority,
   /* Add to run queue. */
   thread_unblock (t);
 
+  thread_yield();
+
   return tid;
 }
+
+
 
 /* Puts the current thread to sleep.  It will not be scheduled
    again until awoken by thread_unblock().
@@ -288,6 +292,8 @@ thread_unblock (struct thread *t)
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+
+
 }
 
 /* Returns the name of the running thread. */
@@ -530,13 +536,44 @@ alloc_frame (struct thread *t, size_t size)
    empty.  (If the running thread can continue running, then it
    will be in the run queue.)  If the run queue is empty, return
    idle_thread. */
+static bool
+priority_less (const struct list_elem *a_, const struct list_elem *b_,
+            void *aux UNUSED) 
+{
+  const struct thread * a = list_entry (a_, struct thread, elem);
+  const struct thread * b = list_entry (b_, struct thread, elem);
+  
+  return a->priority < b->priority;
+}
+
 static struct thread *
 next_thread_to_run (void) 
 {
   if (list_empty (&ready_list))
     return idle_thread;
   else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  {
+   // return list_entry (list_pop_front (&ready_list), struct thread, elem);
+    // int max = 0;
+    // struct thread * maxThread = NULL;
+    // for (e = list_begin (&ready_list); e != list_end (&ready_list); e = list_next (e))
+    // {
+    //   struct thread * t = list_entry(e, struct thread, elem);
+    //   if (t->priority > max)
+    //   {
+    //     max = t->priority;
+    //     maxThread = t;
+    //   }
+    // }
+    list_elem * e = list_max(&ready_list, priority_less, NULL);
+    struct thread * t = list_entry(e, struct thread, elem);
+    list_remove(e);
+    return t;
+  }
+}
+int thread_getThread_priority(struct thread * t)
+{
+  return t->priority;
 }
 
 /* Completes a thread switch by activating the new thread's page
