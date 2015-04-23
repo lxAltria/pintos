@@ -160,7 +160,7 @@ thread_tick (void)
       list_remove(e);
     }
   }
-  thread_yield();
+  intr_yield_on_return();
 
 
 }
@@ -565,7 +565,7 @@ next_thread_to_run (void)
     //     maxThread = t;
     //   }
     // }
-    list_elem * e = list_max(&ready_list, priority_less, NULL);
+    struct list_elem * e = list_max(&ready_list, priority_less, NULL);
     struct thread * t = list_entry(e, struct thread, elem);
     list_remove(e);
     return t;
