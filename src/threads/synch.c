@@ -114,8 +114,11 @@ sema_up (struct semaphore *sema)
 
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters)) 
-    thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
+  {
+    list_elem * e = list_max (&sema->waiters, priority_less, NULL);
+    thread_unblock (list_entry (e, struct thread, elem));
+    list_remove(e);
+  }
   sema->value++;
   intr_set_level (old_level);
 }
@@ -197,7 +200,12 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
 
   sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+
+  if(lock->holder == NULL)
+  {
+    lock->holder = thread_current ();
+    list_push_back(&(thread_current()->locks), &lock->lock_elem);
+  }
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -232,9 +240,21 @@ lock_release (struct lock *lock)
   ASSERT (lock_held_by_current_thread (lock));
 
   lock->holder = NULL;
+  struct list_elem * e = &lock->lock_elem;
+  list_remove(e);
+
   sema_up (&lock->semaphore);
 }
+static bool
+priority_less (const struct list_elem *a_, const struct list_elem *b_,
+            void *aux UNUSED) 
+{
+  const struct thread * a = list_entry (a_, struct thread, elem);
+  const struct thread * b = list_entry (b_, struct thread, elem);
+  
+  return thread_getThread_priority(a) < thread_getThread_priority(b);
 
+}
 /* Returns true if the current thread holds LOCK, false
    otherwise.  (Note that testing whether some other thread holds
    a lock would be racy.) */

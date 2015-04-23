@@ -543,7 +543,7 @@ priority_less (const struct list_elem *a_, const struct list_elem *b_,
   const struct thread * a = list_entry (a_, struct thread, elem);
   const struct thread * b = list_entry (b_, struct thread, elem);
   
-  return a->priority < b->priority;
+  return thread_getThread_priority(a) < thread_getThread_priority(b);
 }
 
 static struct thread *
@@ -573,9 +573,24 @@ next_thread_to_run (void)
 }
 int thread_getThread_priority(struct thread * t)
 {
-  return t->priority;
+  if(list_empty(&(&t->locks));
+    return t->priority;
+  int max_priority = t->priority;
+  struct list_elem *e;
+  for (e = list_begin (&(&t->locks)); e != list_end (&(&t->locks); e = list_next (e))
+  {
+    struct lock * l = list_entry(e, struct lock, lock_elem);
+    struct list_elem * le = list_max(&(&l->semaphore->waiters)), priority_less, NULL);
+    int currentPrioirty = thread_getThread_priority(list_entry(le, struct thread, elem));
+    if(max_priority < currentPrioirty)
+      max_priority = currentPrioirty;
+  }
+  return max_priority;
 }
-
+int thread_setThread_priority(struct thread * t, int new_priority)
+{
+  t->priority = new_priority;
+}
 /* Completes a thread switch by activating the new thread's page
    tables, and, if the previous thread is dying, destroying it.
 

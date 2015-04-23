@@ -97,6 +97,8 @@ struct thread
 
     int64_t awakeTime;
 
+    struct list locks;
+
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
